@@ -1,0 +1,148 @@
+
+# ELECTROHUB – DATA DICTIONARY / METADATA
+
+Last updated: 2025-09-29  
+Currency: INR (₹) unless stated otherwise  
+Reporting scope: Retail orders (2020–2024) across Indian cities  
+Primary storage: Store Data.xlsx → Power BI model
+
+---
+
+## 1) dimDate  (Calendar)
+Purpose: Standard calendar table used for time intelligence and filtering.  
+Grain: One row per calendar Date.  
+Primary key: DateKey (YYYYMMDD, integer).
+
+Columns:
+- DateKey (INT): Surrogate key in YYYYMMDD format. Example: 20240131
+- Date (DATE): Calendar date. Example: 2024-01-31
+- Year (INT): Calendar year. Example: 2024
+- Quarter (TEXT): Quarter label Q1–Q4. Example: Q1
+- MonthNumber (INT): Month number 1–12. Example: 1
+- MonthName (TEXT): Full month name. Example: January
+- WeekNumber (INT): ISO week number. Example: 5
+- Day (INT): Day of month. Example: 31
+- IsWeekend (BOOL): True if Saturday/Sunday. Example: FALSE
+
+---
+
+## 2) dimCustomer
+Purpose: Customer attributes for segmentation.  
+Grain: One row per Customer.  
+Primary key: CustomerID.
+
+Columns:
+- CustomerID (TEXT): Unique identifier. Example: C1024
+- CustomerName (TEXT): Display name. Example: R. Sharma
+- Gender (TEXT): Male / Female
+- AgeGroup (TEXT): Age buckets. Example: 26-35
+- CityID (TEXT): Home city (FK). Example: CT_MUM
+- LoyaltyTier (TEXT): Loyalty level. Example: Gold
+
+---
+
+## 3) dimProduct
+Purpose: Product catalog and attributes.  
+Grain: One row per Product.  
+Primary key: ProductID.
+
+Columns:
+- ProductID (TEXT): Unique product code. Example: P004
+- ProductName (TEXT): Name. Example: Apple iPhone 14
+- Brand (TEXT): Manufacturer. Example: Apple
+- Category (TEXT): Category. Example: Mobile Phones
+- SubCategory (TEXT): Sub-category. Example: Smartphones
+- UnitOfMeasure (TEXT): Selling unit. Example: Unit
+- CostPerUnit (DECIMAL): Cost. Example: 48,500.00
+- ActiveFlag (BOOL): True if sold. Example: TRUE
+
+---
+
+## 4) dimCity
+Purpose: Selling/fulfilment location.  
+Grain: One row per City.  
+Primary key: CityID.
+
+Columns:
+- CityID (TEXT): Surrogate key. Example: CT_MAA
+- City (TEXT): City name. Example: Chennai
+- State (TEXT): State/UT. Example: Tamil Nadu
+- Region (TEXT): Optional region bucket. Example: South
+
+---
+
+## 5) dimPromotion
+Purpose: Campaign and discount definitions.  
+Grain: One row per Promotion.  
+Primary key: PromotionID.
+
+Columns:
+- PromotionID (INT): Key. Example: 1007
+- PromotionName (TEXT): Campaign name. Example: Weekend Flash Sale
+- PromotionType (TEXT): Type. Example: Clearance
+- StartDate (DATE): Campaign start. Example: 2023-11-01
+- EndDate (DATE): Campaign end. Example: 2023-11-05
+- BaseDiscountPct (DECIMAL): Planned discount %. Example: 10.00
+
+---
+
+## 6) factSales (Order Line Facts)
+Purpose: Transactional facts.  
+Grain: One row per Order Line.  
+Primary key: Composite (or SalesLineID).
+
+Columns:
+- SalesLineID (BIGINT): Line id. Example: 184553
+- OrderID (INT): Order id. Example: 1251
+- DateKey (INT): FK to dimDate. Example: 20200109
+- CustomerID (TEXT): FK to dimCustomer. Example: C1102
+- ProductID (TEXT): FK to dimProduct. Example: P004
+- CityID (TEXT): FK to dimCity. Example: CT_MUM
+- PromotionID (INT): FK to dimPromotion. Example: 0
+- UnitsSold (INT): Quantity. Example: 1
+- PricePerUnitINR (DECIMAL): Price per unit. Example: 64,999.00
+- TotalSales (DECIMAL): Gross revenue. Example: 64,999.00
+- TotalDiscount (DECIMAL): Discount applied. Example: 299.80
+- DiscountPercentage (DECIMAL): Discount %. Example: 0.46%
+- NetSales (DECIMAL): TotalSales – Discount. Example: 64,699.20
+- CostAmount (DECIMAL): Cost. Example: 48,500.00
+- Profit (DECIMAL): NetSales – Cost. Example: 16,199.20
+- Currency (TEXT): INR
+
+---
+
+## 7) factOrders (Optional)
+Purpose: Order-level attributes.  
+Grain: One row per Order.  
+Primary key: OrderID.
+
+Columns:
+- OrderID (INT): Header id. Example: 1251
+- OrderDateKey (INT): Date key. Example: 20200109
+- CustomerID (TEXT): FK → dimCustomer
+- CityID (TEXT): FK → dimCity
+- Channel (TEXT): Sales channel. Example: Online
+- PaymentMode (TEXT): Payment method. Example: UPI
+
+---
+
+## Relationships
+- factSales.DateKey → dimDate.DateKey  
+- factSales.CustomerID → dimCustomer.CustomerID  
+- factSales.ProductID → dimProduct.ProductID  
+- factSales.CityID → dimCity.CityID  
+- factSales.PromotionID → dimPromotion.PromotionID
+
+---
+
+## Measures in Power BI
+- Total Orders = DISTINCTCOUNT(OrderID)
+- Total Units = SUM(UnitsSold)
+- Total Sales = SUM(TotalSales)
+- Net Sales = SUMX(factSales, TotalSales − TotalDiscount)
+- Profit = NetSales – CostAmount (if available)
+
+---
+
+Contact: Sales Operations – ElectroHub  
+BI Owner: Analytics & Insights Team
