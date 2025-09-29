@@ -143,6 +143,3 @@ Columns:
 - Profit = NetSales – CostAmount (if available)
 
 ---
-
-Contact: Sales Operations – ElectroHub  
-BI Owner: Analytics & Insights Team
